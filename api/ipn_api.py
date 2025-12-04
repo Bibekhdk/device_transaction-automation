@@ -68,7 +68,7 @@ class IPNAPI(BaseAPI):
             # Validate response
             expected_message = "notification delivered successfully"
             if response.get('message') == expected_message:
-                logger.info(f"✅ {self.scheme.upper()} transaction successful: {amount}")
+                logger.info(f" {self.scheme.upper()} transaction successful: {amount}")
                 return response
             else:
                 error_msg = f"{self.scheme.upper()} transaction failed: {response}"
@@ -76,7 +76,7 @@ class IPNAPI(BaseAPI):
                 raise Exception(error_msg)
                 
         except Exception as e:
-            logger.error(f"❌ {self.scheme.upper()} transaction failed: {str(e)}")
+            logger.error(f" {self.scheme.upper()} transaction failed: {str(e)}")
             raise
     
     @allure.step("Send NCHL transaction")

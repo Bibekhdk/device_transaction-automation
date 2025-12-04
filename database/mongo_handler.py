@@ -133,10 +133,10 @@ class MongoHandler:
             transaction = collection.find_one(query)
             
             if transaction:
-                logger.info(f"✅ Transaction verified: {scheme} - {amount} - {status}")
+                logger.info(f"Transaction verified: {scheme} - {amount} - {status}")
                 return True
             else:
-                logger.warning(f"❌ Transaction not found: {scheme} - {amount} - {status}")
+                logger.warning(f" Transaction not found: {scheme} - {amount} - {status}")
                 return False
                 
         except PyMongoError as e:
@@ -211,7 +211,7 @@ class MongoHandler:
         
         if (found_amounts == expected_amounts_sorted and 
             found_schemes == expected_schemes_sorted):
-            logger.info("✅ Transaction amounts and schemes match expected values")
+            logger.info(" Transaction amounts and schemes match expected values")
             return True
         else:
             logger.error(f"Amounts mismatch: expected {expected_amounts_sorted}, got {found_amounts}")

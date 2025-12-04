@@ -38,7 +38,7 @@ class DPSAPI(BaseAPI):
             
             # Validate response
             if response.get('status') == 'success' or response.get('status_code') == 200:
-                logger.info(f"✅ DPS request successful for {serial_number}")
+                logger.info(f" DPS request successful for {serial_number}")
                 return response
             else:
                 error_msg = f"DPS request failed: {response}"
@@ -46,7 +46,7 @@ class DPSAPI(BaseAPI):
                 raise Exception(error_msg)
                 
         except Exception as e:
-            logger.error(f"❌ DPS request failed for {serial_number}: {str(e)}")
+            logger.error(f" DPS request failed for {serial_number}: {str(e)}")
             raise
     
     @allure.step("Check DPS status for device {serial_number}")

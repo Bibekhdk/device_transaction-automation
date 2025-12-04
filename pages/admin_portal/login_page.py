@@ -61,9 +61,9 @@ class AdminLoginPage(BasePage):
         
         # Verify login success (you might need to adjust this based on actual portal)
         if self.is_login_successful():
-            logger.info("✅ Admin login successful")
+            logger.info(" Admin login successful")
         else:
-            error_msg = "❌ Admin login failed"
+            error_msg = " Admin login failed"
             self.take_screenshot("admin_login_failed.png")
             raise Exception(error_msg)
     
