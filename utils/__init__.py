@@ -3,6 +3,19 @@
 Utilities module for Device Transaction Automation
 """
 
+from .logger import (
+    setup_logger,
+    get_logger,
+    set_log_level,
+    add_file_handler,
+    log_test_start,
+    log_test_end,
+    log_step,
+    log_screenshot,
+    log_api_request,
+    log_api_response
+)
+
 from .helpers import (
     retry,
     generate_random_string,
@@ -18,9 +31,20 @@ from .helpers import (
     mask_sensitive_data
 )
 
-from .logger import setup_logger
-
 __all__ = [
+    # Logger functions
+    'setup_logger',
+    'get_logger',
+    'set_log_level',
+    'add_file_handler',
+    'log_test_start',
+    'log_test_end',
+    'log_step',
+    'log_screenshot',
+    'log_api_request',
+    'log_api_response',
+    
+    # Helper functions
     'retry',
     'generate_random_string',
     'generate_imei',
@@ -32,6 +56,5 @@ __all__ = [
     'read_env_var',
     'TimeoutError',
     'timeout',
-    'mask_sensitive_data',
-    'setup_logger'
+    'mask_sensitive_data'
 ]
