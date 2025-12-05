@@ -2,17 +2,15 @@
 environments:
   staging:
     name: "Staging Environment"
-    timeout: 600  # 10 minutes max
-    
-  uat:
-    name: "UAT Environment"
     timeout: 600
+    
+active_environment: staging
 
 urls:
   admin_portal: "https://admin.staging.koiliifn.com"
-  tms_portal: "https://tms-uat.koilifin.com"  
+  tms_portal: "https://tms-uat.koilifin.com"
   ipn_api: "https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify"
-  
+
 api:
   max_retries: 3
   retry_delay: 2
@@ -22,7 +20,7 @@ test:
   max_execution_time: 600
   transaction_wait_time: 30
   screenshot_on_failure: true
-  headless: true  # Run browser in headless mode
+  headless: true
   
 data:
   default_customer: "Bitskraft Pvt Ltd"

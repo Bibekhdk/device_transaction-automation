@@ -10,25 +10,34 @@ logger = logging.getLogger(__name__)
 class IPNAPI(BaseAPI):
     """Client for IPN (Instant Payment Notification) API"""
     
-    def __init__(self, base_url: str, scheme: str = "nchl"):
+    def __init__(self, base_url: str = None, scheme: str = "nchl"):
         """
         Initialize IPN API client
         
         Args:
-            base_url: IPN API base URL
+            base_url: IPN API base URL (optional)
             scheme: Payment scheme (nchl or fonepay)
         """
+        # Get base URL - use provided or default
+        if not base_url:
+            base_url = "https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify"
+        
         # Get API key based on scheme
         api_key = os.getenv(
             "NCHL_API_KEY" if scheme == "nchl" else "FONEPAY_API_KEY"
         )
         
         if not api_key:
-            raise ValueError(f"API key not found for scheme: {scheme}")
+            logger.warning(f"API key not found for scheme: {scheme}")
+            # Don't raise error - will fail when trying to make request
+            api_key = ""
         
         super().__init__(base_url, api_key)
         self.scheme = scheme
         
+        logger.info(f"IPN API initialized for {scheme.upper()} scheme")
+        logger.debug(f"Base URL: {base_url}")
+    
     @allure.step("Send {scheme} transaction notification")
     def send_transaction(
         self, 
@@ -53,7 +62,7 @@ class IPNAPI(BaseAPI):
         Returns:
             Response from IPN API
         """
-        endpoint = "/notify"  # Based on your Step 8
+        endpoint = ""  # Base URL already includes /notify
         
         # Build payload based on scheme
         payload = self._build_payload(
@@ -68,7 +77,7 @@ class IPNAPI(BaseAPI):
             # Validate response
             expected_message = "notification delivered successfully"
             if response.get('message') == expected_message:
-                logger.info(f" {self.scheme.upper()} transaction successful: {amount}")
+                logger.info(f"✅ {self.scheme.upper()} transaction successful: {amount}")
                 return response
             else:
                 error_msg = f"{self.scheme.upper()} transaction failed: {response}"
@@ -76,7 +85,7 @@ class IPNAPI(BaseAPI):
                 raise Exception(error_msg)
                 
         except Exception as e:
-            logger.error(f" {self.scheme.upper()} transaction failed: {str(e)}")
+            logger.error(f"❌ {self.scheme.upper()} transaction failed: {str(e)}")
             raise
     
     @allure.step("Send NCHL transaction")
@@ -100,13 +109,13 @@ class IPNAPI(BaseAPI):
             Response from IPN API
         """
         # Create NCHL-specific client
-        nchl_client = IPNAPI(self.base_url, scheme="nchl")
+        nchl_client = IPNAPI(scheme="nchl")
         
         return nchl_client.send_transaction(
             amount=amount,
-            storeId=store_id,
-            terminalId=terminal_id,
-            merchantCode=merchant_code
+            store_id=store_id,
+            terminal_id=terminal_id,
+            merchant_code=merchant_code
         )
     
     @allure.step("Send Fonepay transaction")
@@ -128,12 +137,12 @@ class IPNAPI(BaseAPI):
             Response from IPN API
         """
         # Create Fonepay-specific client
-        fonepay_client = IPNAPI(self.base_url, scheme="fonepay")
+        fonepay_client = IPNAPI(scheme="fonepay")
         
         return fonepay_client.send_transaction(
             amount=amount,
-            merchantId=merchant_id,
-            terminalId=terminal_id
+            merchant_id=merchant_id,
+            terminal_id=terminal_id
         )
     
     def _build_payload(
@@ -164,7 +173,55 @@ class IPNAPI(BaseAPI):
         
         # Add additional parameters if provided
         payload.update(kwargs)
-        return payload
+        
+        # Remove None values
+        return {k: v for k, v in payload.items() if v is not None}
+    
+    @allure.step("Verify transaction parameters")
+    def verify_transaction_parameters(
+        self,
+        amount: str,
+        merchant_code: str = None,
+        merchant_id: str = None,
+        store_id: str = None,
+        terminal_id: str = None
+    ) -> bool:
+        """
+        Verify transaction parameters before sending
+        
+        Returns:
+            bool: True if parameters are valid
+        """
+        errors = []
+        
+        # Validate amount
+        if not amount or not isinstance(amount, str):
+            errors.append("Amount must be a non-empty string")
+        elif not amount.isdigit():
+            errors.append("Amount must contain only digits")
+        elif int(amount) <= 0:
+            errors.append("Amount must be positive")
+        
+        # Validate scheme-specific parameters
+        if self.scheme == "nchl":
+            if not store_id:
+                errors.append("Store ID is required for NCHL transactions")
+            if not terminal_id:
+                errors.append("Terminal ID is required for NCHL transactions")
+            if not merchant_code:
+                errors.append("Merchant code is required for NCHL transactions")
+        elif self.scheme == "fonepay":
+            if not merchant_id:
+                errors.append("Merchant ID is required for Fonepay transactions")
+            if not terminal_id:
+                errors.append("Terminal ID is required for Fonepay transactions")
+        
+        if errors:
+            logger.error(f"Transaction parameter validation failed: {', '.join(errors)}")
+            return False
+        
+        logger.info(f" Transaction parameters validated for {self.scheme.upper()}")
+        return True
     
     @allure.step("Verify IPN API health")
     def health_check(self) -> bool:

@@ -5,7 +5,7 @@ import allure
 import time
 import os
 from datetime import datetime
-from typing import Optional
+from typing import Optional 
 
 logger = logging.getLogger(__name__)
 
