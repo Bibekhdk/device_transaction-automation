@@ -59,7 +59,7 @@ class TestIPNAPI:
         
         # Valid parameters
         assert nchl_client.verify_transaction_parameters(
-            amount="33333",
+            amount="11111111",
             store_id="store123",
             terminal_id="terminal123",
             merchant_code="merchant123"
@@ -78,7 +78,7 @@ class TestIPNAPI:
         
         # Valid parameters
         assert fonepay_client.verify_transaction_parameters(
-            amount="44444",
+            amount="222222",
             merchant_id="merchant456",
             terminal_id="terminal456"
         ) == True
@@ -94,13 +94,13 @@ class TestIPNAPI:
         # Test NCHL payload
         nchl_client = IPNAPI(scheme="nchl")
         nchl_payload = nchl_client._build_payload(
-            amount="33333",
+            amount="11111111",
             store_id="store123",
             terminal_id="terminal123",
             merchant_code="merchant123"
         )
         
-        assert nchl_payload["amount"] == "33333"
+        assert nchl_payload["amount"] == "11111111"
         assert nchl_payload["storeId"] == "store123"
         assert nchl_payload["terminalId"] == "terminal123"
         assert nchl_payload["merchantCode"] == "merchant123"
@@ -108,12 +108,12 @@ class TestIPNAPI:
         # Test Fonepay payload
         fonepay_client = IPNAPI(scheme="fonepay")
         fonepay_payload = fonepay_client._build_payload(
-            amount="44444",
+            amount="222222",
             merchant_id="merchant456",
             terminal_id="terminal456"
         )
         
-        assert fonepay_payload["amount"] == "44444"
+        assert fonepay_payload["amount"] == "222222"
         assert fonepay_payload["merchantId"] == "merchant456"
         assert fonepay_payload["terminalId"] == "terminal456"
         
