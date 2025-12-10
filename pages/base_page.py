@@ -1,105 +1,91 @@
-# pages/base_page.py
-from playwright.sync_api import Page, Locator, expect
-import logging
+"""
+Base Page Object Model for all page classes
+"""
 import allure
+import logging
+from playwright.sync_api import Page
 import time
-import os
 from datetime import datetime
-from typing import Optional 
 
 logger = logging.getLogger(__name__)
 
 class BasePage:
-    """Base page class with common methods"""
+    """Base class for all page objects"""
     
     def __init__(self, page: Page):
         self.page = page
-        self.timeout = 30000  # 30 seconds default timeout
-        self.screenshot_dir = "reports/screenshots"
-        
-        # Create screenshots directory if it doesn't exist
-        os.makedirs(self.screenshot_dir, exist_ok=True)
+        self.logger = logger
+        self.default_timeout = 30000
     
-    def take_screenshot(self, name: str = None) -> str:
-        """Take screenshot and return file path"""
-        if not name:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            name = f"screenshot_{timestamp}.png"
-        
-        screenshot_path = os.path.join(self.screenshot_dir, name)
-        self.page.screenshot(path=screenshot_path, full_page=True)
-        logger.info(f"Screenshot saved: {screenshot_path}")
-        
-        # Attach to Allure report
-        allure.attach.file(
-            screenshot_path,
-            name=name,
-            attachment_type=allure.attachment_type.PNG
-        )
-        
-        return screenshot_path
-    
-    @allure.step("Navigate to {url}")
-    def navigate(self, url: str):
+    # ==================== COMMON ACTIONS ====================
+    def navigate(self, url: str, timeout: int = None) -> None:
         """Navigate to URL"""
-        logger.info(f"Navigating to: {url}")
-        self.page.goto(url, wait_until="networkidle")
+        self.logger.info(f"Navigating to: {url}")
+        self.page.goto(url, timeout=timeout or self.default_timeout)
     
-    @allure.step("Click element: {selector}")
-    def click(self, selector: str, timeout: int = None):
-        """Click element by selector"""
-        timeout = timeout or self.timeout
-        logger.debug(f"Clicking: {selector}")
-        self.page.click(selector, timeout=timeout)
+    def click(self, selector: str, element_name: str = "") -> None:
+        """Click on element"""
+        self.logger.info(f"Clicking on {element_name or selector}")
+        self.page.click(selector)
     
-    @allure.step("Fill {selector} with {value}")
-    def fill(self, selector: str, value: str, timeout: int = None):
+    def fill(self, selector: str, text: str, element_name: str = "") -> None:
         """Fill input field"""
-        timeout = timeout or self.timeout
-        logger.debug(f"Filling {selector} with: {value}")
-        self.page.fill(selector, value, timeout=timeout)
+        self.logger.info(f"Filling {element_name or selector}: {text}")
+        self.page.fill(selector, text)
     
-    @allure.step("Select option {value} from {selector}")
-    def select_option(self, selector: str, value: str, timeout: int = None):
+    def select_option(self, selector: str, value: str, element_name: str = "") -> None:
         """Select option from dropdown"""
-        timeout = timeout or self.timeout
-        logger.debug(f"Selecting {value} from {selector}")
-        self.page.select_option(selector, value, timeout=timeout)
+        self.logger.info(f"Selecting {value} in {element_name or selector}")
+        self.page.select_option(selector, value)
     
-    @allure.step("Wait for element: {selector}")
-    def wait_for_element(self, selector: str, timeout: int = None) -> Locator:
-        """Wait for element to be visible"""
-        timeout = timeout or self.timeout
-        logger.debug(f"Waiting for element: {selector}")
-        element = self.page.locator(selector)
-        element.wait_for(state="visible", timeout=timeout)
-        return element
+    def wait_for_element(self, selector: str, element_name: str = "", timeout: int = None) -> None:
+        """Wait for element to be present"""
+        self.logger.info(f"Waiting for {element_name or selector}")
+        self.page.wait_for_selector(selector, timeout=timeout or self.default_timeout)
     
-    @allure.step("Get text from element: {selector}")
-    def get_text(self, selector: str, timeout: int = None) -> str:
-        """Get text from element"""
-        element = self.wait_for_element(selector, timeout)
-        text = element.inner_text()
-        logger.debug(f"Got text from {selector}: {text}")
-        return text
+    def is_element_present(self, selector: str, timeout: int = 5000) -> bool:
+        """Check if element is present"""
+        try:
+            self.page.wait_for_selector(selector, timeout=timeout, state="attached")
+            return True
+        except:
+            return False
     
-    @allure.step("Verify element contains text: {text}")
-    def verify_text_contains(self, selector: str, text: str, timeout: int = None):
-        """Verify element contains text"""
-        element = self.wait_for_element(selector, timeout)
-        expect(element).to_contain_text(text)
-        logger.info(f"Verified {selector} contains: {text}")
-    
-    def is_element_visible(self, selector: str, timeout: int = None) -> bool:
+    def is_element_visible(self, selector: str, timeout: int = 5000) -> bool:
         """Check if element is visible"""
         try:
-            self.wait_for_element(selector, timeout)
+            self.page.wait_for_selector(selector, timeout=timeout, state="visible")
+            return True
+        except:
+            return False
+    
+    # ==================== UTILITY METHODS ====================
+    def take_screenshot(self, name: str) -> None:
+        """Take screenshot and attach to allure"""
+        screenshot = self.page.screenshot()
+        allure.attach(screenshot, name=name, attachment_type=allure.attachment_type.PNG)
+    
+    def refresh_page(self) -> None:
+        """Refresh current page"""
+        self.logger.info("Refreshing page")
+        self.page.reload()
+    
+    def get_element_text(self, selector: str, timeout: int = 5000) -> str:
+        """Get text content of element"""
+        try:
+            return self.page.locator(selector).first.text_content(timeout=timeout)
+        except:
+            return ""
+    
+    def wait_for_element_to_disappear(self, selector: str, timeout: int = 10000) -> bool:
+        """Wait for element to disappear"""
+        try:
+            self.page.wait_for_selector(selector, timeout=timeout, state="detached")
             return True
         except:
             return False
     
     @allure.step("Wait for {seconds} seconds")
-    def wait(self, seconds: int):
-        """Explicit wait"""
-        logger.debug(f"Waiting for {seconds} seconds")
+    def wait(self, seconds: int) -> None:
+        """Wait for specified seconds"""
         time.sleep(seconds)
