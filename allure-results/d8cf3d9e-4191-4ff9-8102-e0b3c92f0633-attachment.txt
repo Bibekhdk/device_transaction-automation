@@ -1,0 +1,1 @@
+[31m[1mERROR   [0m pages.base_page:device_registration_page.py:224 ❌ Device registration failed: Target page, context or browser has been closed

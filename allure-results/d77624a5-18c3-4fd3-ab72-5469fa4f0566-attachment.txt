@@ -1,1 +1,0 @@
-[31m[1mERROR   [0m tests.test_tms_full_flow:test_tms_full_flow.py:44 Test failed: Target page, context or browser has been closed

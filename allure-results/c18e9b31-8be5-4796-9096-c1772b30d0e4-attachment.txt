@@ -1,0 +1,14 @@
+
+    ====== TEST SUMMARY ======
+    STATUS: ✅ PASSED
+    DEVICE: 
+      • SIM: 6907861259
+      • Serial: 1293638648
+      • IMEI: 161993286253167
+      • Customer: Anugya
+    TOAST:
+      • Text: 'device added'
+      • Contains 'device added': ✅ YES
+      • Wait time: 1066ms
+    ==========================
+    

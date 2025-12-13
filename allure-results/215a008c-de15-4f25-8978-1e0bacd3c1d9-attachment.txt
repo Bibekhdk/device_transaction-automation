@@ -1,0 +1,2 @@
+[1m[31mERROR   [0m pages.admin_portal.device_registration_page:device_registration_page.py:215 Failed to fill device form: Timeout 5000ms exceeded.
+[1m[31mERROR   [0m pages.admin_portal.device_registration_page:device_registration_page.py:324 ❌ Device registration failed: Timeout 5000ms exceeded.

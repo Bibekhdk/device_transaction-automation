@@ -1,0 +1,24 @@
+
+    ====== TMS FLOW TEST SUMMARY ======
+    STATUS: ✅ PASSED
+    
+    MERCHANT CREATION:
+      • Account: 093242221
+      • Name: testmerchantr
+      • PAN: pantest45
+      • Toast: 'Merchant'
+    
+    IPN ASSIGNMENT:
+      • IPN Serial: 38231105960007
+      • Terminal ID: terminalewfhs
+      • Store ID: store2324v
+      • Toast: 'Merchant'
+    
+    TEST STEPS:
+      • Login: ✅ Success
+      • Sync IPN: ✅ Success
+      • Add Merchant: ✅ Success
+      • Assign IPN: ✅ Success
+      • Navigate Dashboard: ✅ Success
+    ===================================
+    

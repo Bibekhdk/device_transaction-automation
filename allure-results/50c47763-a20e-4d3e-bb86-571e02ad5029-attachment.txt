@@ -1,0 +1,1 @@
+[31m[1mERROR   [0m pages.admin_portal.device_registration_page:device_registration_page.py:162 ❌ Failed to capture toast: Timeout 15000ms exceeded. (waited 15004ms)

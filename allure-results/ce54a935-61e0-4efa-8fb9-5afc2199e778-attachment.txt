@@ -1,0 +1,4 @@
+[31m[1mERROR   [0m pages.base_page:tms_full_flow.py:293 ❌ Failed to add merchant: Target page, context or browser has been closed
+[33mWARNING [0m pages.base_page:base_page.py:419 Could not take screenshot merchant_add_failed: Page is no longer usable: Target page, context or browser has been closed
+[31m[1mERROR   [0m pages.base_page:tms_full_flow.py:568 ❌❌❌ Complete TMS flow FAILED: Target page, context or browser has been closed
+[33mWARNING [0m pages.base_page:base_page.py:419 Could not take screenshot complete_tms_flow_failed: Page has been closed

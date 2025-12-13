@@ -1,0 +1,1 @@
+{'success': True, 'text': 'device added', 'id': '1', 'classes': 'Toastify__toast Toastify__toast-theme--light Toastify__toast--success Toastify__toast--close-on-click', 'contains_expected': True, 'expected_text': 'device added', 'wait_time_ms': 1336, 'timestamp': '2025-12-12 16:40:29'}

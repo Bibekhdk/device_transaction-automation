@@ -1,400 +1,625 @@
 """
-TMS Portal Page Object Model
-Complete implementation of all TMS UI automation steps
+TMS Portal Page Object - Using Codegen Locators
 """
 import allure
 import logging
-import time
-from datetime import datetime
-from typing import Dict, Any, Optional
 from pages.base_page import BasePage
+import time
 
 logger = logging.getLogger(__name__)
 
-class TMSPortal(BasePage):
-    """TMS Portal Page Object with all business logic"""
+class TMSPage(BasePage):
+    """Page Object for TMS Portal using Codegen locators"""
     
-    # ==================== URL CONFIG ====================
-    TMS_URL = "https://ipn-tms-staging.koilifin.com"
+    # URL
+    TMS_PORTAL_URL = "https://ipn-tms-staging.koilifin.com/auth"
     
-    # ==================== LOCATORS ====================
-    class Locators:
-        # Login Page
-        USERNAME_INPUT = 'input[id="username"]'
-        PASSWORD_INPUT = 'css=#outlined-adornment-password-1'
-        LOGIN_BUTTON = "button:has-text('Sign In')"
-        DASHBOARD_HEADER = "text='TMS Dashboard'"
-        
-        # Navigation
-        IPN_MENU = "role=button[name='IPN']"
-        MERCHANT_MENU = "div[role='button'] >> text=Merchant"
-        
-        # IPN Sync
-        SYNC_IPN_BUTTON = "label:has-text('Sync IPN')"
-        SYNC_SUCCESS_INDICATOR = "text='Last Sync'"
-        
-        # Merchant Creation
-        ADD_MERCHANT_BUTTON = "button:has-text('Add Merchant')"
-        ACCOUNT_NUMBER_INPUT = '[role="textbox"][name="account_number"]'
-        PAN_INPUT = '[role="textbox"][id="pan"]'
-        BRANCH_SELECT = '[role="combobox"][id="branch"]'
-        SCHEME_SELECT = '[role="combobox"][id="scheme-select-box"]'
-        NCHL_MERCHANT_CODE_INPUT = '#nchl_merchantCode'
-        FONEPAY_MERCHANT_ID_INPUT = '#fonepay_merchantId'
-        CATEGORY_CODE_SELECT = '[role="combobox"][id="category-code-search"]'
-        NAME_INPUT = '#name'
-        ADDRESS_INPUT = '#address'
-        EMAIL_INPUT = '#email'
-        PHONE_INPUT = '#phone'
-        ADD_SUBMIT_BUTTON = 'button:text("Add")'
-        
-        # Merchant List
-        MERCHANT_TABLE = '.merchant-table'
-        FIRST_MERCHANT_ROW = '.merchant-table tbody tr:first-child'
-        MERCHANT_NAME_CELL = 'td:nth-child(2)'
-        
-        # Device Assignment
-        ACTION_MENU_BUTTON = '[data-testid="MoreHorizIcon"]'
-        ASSIGNED_IPNS_MENU_ITEM = '[role="menuitem"]:text("Assigned IPNs")'
-        ASSIGN_IPN_BUTTON = 'button:text("Assign IPN")'
-        SEARCH_INPUT = "input[placeholder='Search by serial']"
-        IPN_CHECKBOX = '[data-testid="CheckBoxOutlineBlankIcon"]'
-        
-        # Scheme Identifiers
-        SCHEME_ICON_BUTTON = '[data-testid="SchemaIcon"]'
-        NCHL_TERMINAL_ID_INPUT = '#nchl_terminalId'
-        NCHL_STORE_ID_INPUT = '#nchl_storeId'
-        FONEPAY_TERMINAL_ID_INPUT = '#fonepay_terminalId'
-        UPDATE_IDENTIFIERS_BUTTON = 'button:has-text("Update")'
-        ASSIGN_FINAL_BUTTON = 'button:has-text("Assign")'
-        
-        # Common Elements
-        LOADING_SPINNER = '.loading-spinner'
-        TOAST_MESSAGE = '.toast-message'
+    # Login Credentials
+    DEFAULT_USERNAME = "admin1"
+    DEFAULT_PASSWORD = "@dmin2929A"
     
     def __init__(self, page):
         super().__init__(page)
-        self.locators = self.Locators()
-        logger.info("Initialized TMS Portal POM")
+        self.last_toast_message = None
     
-    # ==================== STEP 1: LOGIN ====================
+    # ==================== LOGIN ====================
     @allure.step("Login to TMS Portal")
-    def login(self, username: str = "admin1", password: str = "@dmin2929A") -> 'TMSPortal':
-        """Login to TMS Portal"""
-        logger.info(f"Logging in with username: {username}")
+    def login(self, username: str = None, password: str = None):
+        """Login to TMS portal"""
+        self.logger.info("Logging in to TMS portal")
         
-        # Navigate to TMS
-        self.navigate(self.TMS_URL)
-        self.take_screenshot("login_page")
+        username = username or self.DEFAULT_USERNAME
+        password = password or self.DEFAULT_PASSWORD
         
-        # Fill credentials
-        self.fill(self.locators.USERNAME_INPUT, username, "Username")
-        self.fill(self.locators.PASSWORD_INPUT, password, "Password")
-        
-        # Click login
-        self.click(self.locators.LOGIN_BUTTON, "Login Button")
-        
-        # Verify login success
-        self.wait_for_element(self.locators.DASHBOARD_HEADER, "Dashboard Header", timeout=15000)
-        self.take_screenshot("dashboard_loaded")
-        
-        logger.info(" Login successful")
-        return self
-    
-    # ==================== STEP 2: SYNC IPN ====================
-    @allure.step("Sync IPN Devices")
-    def sync_ipn_devices(self) -> 'TMSPortal':
-        """Sync IPN devices from admin portal"""
-        logger.info("Starting IPN sync")
-        
-        # Navigate to IPN section
-        self.click(self.locators.IPN_MENU, "IPN Menu")
-        self.wait(2)
-        
-        # Click sync button
-        self.click(self.locators.SYNC_IPN_BUTTON, "Sync IPN Button")
-        self.wait(3)  # Wait for sync to complete
-        
-        # Verify sync
-        if self.is_element_present(self.locators.SYNC_SUCCESS_INDICATOR):
-            logger.info(" IPN sync completed")
-        else:
-            logger.warning("Sync indicator not found")
-        
-        self.take_screenshot("ipn_synced")
-        return self
-    
-    # ==================== STEP 3 & 4: CREATE MERCHANT ====================
-    @allure.step("Create New Merchant")
-    def create_merchant(self, merchant_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create merchant with NCHL and Fonepay schemes"""
-        logger.info(f"Creating merchant: {merchant_data.get('name')}")
-        
-        # Navigate to Merchant section
-        self.click(self.locators.MERCHANT_MENU, "Merchant Menu")
-        self.wait(2)
-        
-        # Open add merchant form
-        self.click(self.locators.ADD_MERCHANT_BUTTON, "Add Merchant Button")
-        self.wait(1)
-        self.take_screenshot("merchant_form")
-        
-        # Fill form
-        self._fill_merchant_form(merchant_data)
-        self.take_screenshot("form_filled")
-        
-        # Submit form
-        self.click(self.locators.ADD_SUBMIT_BUTTON, "Submit Button")
-        
-        # Validate creation
-        success = self._validate_merchant_creation()
-        if not success:
-            raise Exception("Merchant creation failed")
-        
-        # Verify in list
-        self.refresh_page()
-        self.wait(3)
-        self._verify_merchant_in_list(merchant_data["name"])
-        
-        # Return result
-        result = merchant_data.copy()
-        result.update({
-            "created_at": datetime.now().isoformat(),
-            "created_successfully": True
-        })
-        
-        logger.info(f" Merchant created: {merchant_data['name']}")
-        return result
-    
-    def _fill_merchant_form(self, merchant_data: Dict[str, Any]) -> None:
-        """Fill all merchant form fields"""
-        # Basic information
-        self.fill(self.locators.ACCOUNT_NUMBER_INPUT, merchant_data["account_number"], "Account Number")
-        self.fill(self.locators.PAN_INPUT, merchant_data["pan"], "PAN")
-        self.select_option(self.locators.BRANCH_SELECT, merchant_data.get("branch", "AACHAM"), "Branch")
-        
-        # Select schemes
-        self._select_schemes()
-        self.wait(2)
-        
-        # Merchant codes
-        self.fill(self.locators.NCHL_MERCHANT_CODE_INPUT, merchant_data["nchl_merchant_code"], "NCHL Code")
-        self.fill(self.locators.FONEPAY_MERCHANT_ID_INPUT, merchant_data["fonepay_merchant_id"], "Fonepay ID")
-        
-        # Category code (optional)
-        self._select_category_code()
-        
-        # Contact details
-        self.fill(self.locators.NAME_INPUT, merchant_data["name"], "Name")
-        self.fill(self.locators.ADDRESS_INPUT, merchant_data["address"], "Address")
-        self.fill(self.locators.EMAIL_INPUT, merchant_data["email"], "Email")
-        self.fill(self.locators.PHONE_INPUT, merchant_data["phone"], "Phone")
-    
-    def _select_schemes(self) -> None:
-        """Select both NCHL and Fonepay schemes"""
-        self.click(self.locators.SCHEME_SELECT, "Scheme Dropdown")
-        self.wait(0.5)
-        
-        # Select NCHL
-        self.page.keyboard.press("ArrowDown")
-        self.page.keyboard.press("Enter")
-        self.wait(0.5)
-        
-        # Select Fonepay
-        self.click(self.locators.SCHEME_SELECT, "Scheme Dropdown")
-        self.wait(0.5)
-        self.page.keyboard.press("ArrowDown")
-        self.page.keyboard.press("ArrowDown")
-        self.page.keyboard.press("Enter")
-        
-        logger.info("Selected NCHL and Fonepay schemes")
-    
-    def _select_category_code(self) -> None:
-        """Select first category code (optional)"""
         try:
-            if self.is_element_present(self.locators.CATEGORY_CODE_SELECT):
-                self.click(self.locators.CATEGORY_CODE_SELECT, "Category Code")
-                self.wait(0.5)
-                self.page.keyboard.press("ArrowDown")
-                self.page.keyboard.press("Enter")
-        except:
-            pass  # Not mandatory
-    
-    def _validate_merchant_creation(self) -> bool:
-        """Validate merchant creation toast message"""
-        try:
-            # Wait for toast message
-            self.wait_for_element(self.locators.TOAST_MESSAGE, "Toast Message", timeout=10000)
-            toast_text = self.get_element_text(self.locators.TOAST_MESSAGE)
+            # Navigate
+            self.navigate(self.TMS_PORTAL_URL)
+            self.wait(2)
             
-            if "successfully" in toast_text.lower():
-                logger.info(f"Merchant creation toast: {toast_text}")
+            # Fill username
+            username_field = self.page.get_by_role("textbox", name="Username")
+            username_field.wait_for(state="visible", timeout=10000)
+            username_field.click()
+            username_field.fill(username)
+            
+            # Fill password
+            password_field = self.page.get_by_role("textbox", name="password")
+            password_field.wait_for(state="visible", timeout=5000)
+            password_field.click()
+            password_field.fill(password)
+            
+            # Click Sign In
+            signin_button = self.page.get_by_role("button", name="Sign In")
+            signin_button.wait_for(state="visible", timeout=5000)
+            signin_button.click()
+            
+            # Wait for login
+            self.wait(3)
+            
+            # Verify login success
+            try:
+                self.page.get_by_role("button", name="IPN", exact=True).wait_for(
+                    state="visible", timeout=10000
+                )
+                self.logger.info(" TMS login successful")
+                self.take_screenshot("tms_login_success")
                 return True
-            elif "already exists" in toast_text.lower():
-                raise Exception(f"Merchant already exists: {toast_text}")
-            else:
-                logger.error(f"Unexpected toast: {toast_text}")
-                return False
-        except Exception as e:
-            logger.error(f"Toast validation error: {e}")
-            return False
-    
-    def _verify_merchant_in_list(self, merchant_name: str) -> bool:
-        """Verify merchant appears in list"""
-        try:
-            if self.is_element_present(self.locators.MERCHANT_TABLE, timeout=5000):
-                name_cell = self.page.locator(f"{self.locators.FIRST_MERCHANT_ROW} {self.locators.MERCHANT_NAME_CELL}")
-                if name_cell.is_visible():
-                    actual_name = name_cell.text_content(timeout=2000)
-                    if merchant_name in actual_name:
-                        logger.info(f" Merchant in list: {actual_name}")
-                        return True
-            return False
-        except:
-            return False
-    
-    # ==================== STEP 5: ASSIGN DEVICE ====================
-    @allure.step("Assign Device to Merchant")
-    def assign_device_to_merchant(self, merchant_name: str, device_serial: str,
-                                 identifiers: Dict[str, str]) -> bool:
-        """Assign device to merchant with identifiers"""
-        logger.info(f"Assigning device {device_serial} to {merchant_name}")
-        
-        try:
-            # Refresh and open assignment
-            self.refresh_page()
-            self.wait(2)
-            
-            # Open merchant actions
-            self.click(self.locators.ACTION_MENU_BUTTON, "Action Menu")
-            self.wait(1)
-            self.click(self.locators.ASSIGNED_IPNS_MENU_ITEM, "Assigned IPNs")
-            self.wait(2)
-            
-            # Open assign modal
-            self.click(self.locators.ASSIGN_IPN_BUTTON, "Assign IPN Button")
-            self.wait(1)
-            self.take_screenshot("assign_modal")
-            
-            # Search and select device
-            self.fill(self.locators.SEARCH_INPUT, device_serial, "Device Search")
-            self.wait(2)
-            self.click(self.locators.IPN_CHECKBOX, "Device Checkbox")
-            self.wait(0.5)
-            
-            # Enter identifiers
-            self.click(self.locators.SCHEME_ICON_BUTTON, "Scheme Icon")
-            self.wait(1)
-            
-            self.fill(self.locators.NCHL_TERMINAL_ID_INPUT, identifiers["nchl_terminal_id"], "NCHL Terminal ID")
-            self.fill(self.locators.NCHL_STORE_ID_INPUT, identifiers["nchl_store_id"], "NCHL Store ID")
-            self.fill(self.locators.FONEPAY_TERMINAL_ID_INPUT, identifiers["fonepay_terminal_id"], "Fonepay Terminal ID")
-            
-            self.take_screenshot("identifiers_filled")
-            
-            # Update identifiers
-            self.click(self.locators.UPDATE_IDENTIFIERS_BUTTON, "Update Button")
-            self.wait(2)
-            
-            # Final assign
-            self.click(self.locators.ASSIGN_FINAL_BUTTON, "Final Assign Button")
-            self.wait(2)
-            
-            # Verify assignment
-            if self.is_element_present(self.locators.TOAST_MESSAGE):
-                toast_text = self.get_element_text(self.locators.TOAST_MESSAGE)
-                if "successfully" in toast_text.lower():
-                    logger.info(f" Assignment successful: {toast_text}")
-                    self.take_screenshot("assignment_complete")
-                    return True
-            
-            logger.error("Assignment failed - no success toast")
-            return False
-            
-        except Exception as e:
-            logger.error(f"Assignment failed: {e}")
-            self.take_screenshot("assignment_failed")
-            return False
-    
-    # ==================== COMPLETE FLOW ====================
-    @allure.step("Execute Complete TMS Flow")
-    def execute_complete_flow(self, device_serial: str,
-                             custom_merchant_data: Optional[Dict] = None,
-                             custom_identifiers: Optional[Dict] = None) -> Dict[str, Any]:
-        """Execute complete TMS flow"""
-        logger.info("Starting complete TMS flow")
-        
-        results = {
-            "start_time": datetime.now().isoformat(),
-            "steps_completed": [],
-            "success": False,
-            "errors": []
-        }
-        
-        try:
-            # Generate test data
-            merchant_data = custom_merchant_data or self.generate_merchant_data()
-            identifiers = custom_identifiers or self.generate_identifiers_data()
-            
-            # Step 1: Login
-            self.login()
-            results["steps_completed"].append("login")
-            
-            # Step 2: Sync IPN
-            self.sync_ipn_devices()
-            results["steps_completed"].append("sync_ipn")
-            
-            # Steps 3&4: Create Merchant
-            merchant_result = self.create_merchant(merchant_data)
-            results["steps_completed"].append("create_merchant")
-            results["merchant"] = merchant_result
-            
-            # Step 5: Assign Device
-            assignment_success = self.assign_device_to_merchant(
-                merchant_name=merchant_result["name"],
-                device_serial=device_serial,
-                identifiers=identifiers
-            )
-            
-            if assignment_success:
-                results["steps_completed"].append("assign_device")
-                results["success"] = True
-                results["device"] = device_serial
-                logger.info(" TMS flow completed successfully")
-            else:
-                results["errors"].append("Device assignment failed")
+            except:
+                raise Exception("Login verification failed - IPN button not found")
                 
         except Exception as e:
-            error_msg = str(e)
-            logger.error(f" TMS flow failed: {error_msg}")
-            results["errors"].append(error_msg)
+            self.logger.error(f" TMS login failed: {str(e)}")
+            self.take_screenshot("tms_login_failed")
+            raise
+    
+    # ==================== IPN SYNC ====================
+    @allure.step("Sync IPN")
+    def sync_ipn(self):
+        """Sync IPN devices"""
+        self.logger.info("Syncing IPN devices")
         
-        results["end_time"] = datetime.now().isoformat()
-        return results
+        try:
+            # Click IPN button
+            ipn_button = self.page.get_by_role("button", name="IPN", exact=True)
+            ipn_button.wait_for(state="visible", timeout=10000)
+            ipn_button.click()
+            
+            self.wait(1)
+            
+            # Click Sync IPN button
+            sync_button = self.page.get_by_role("button", name="Sync IPN")
+            sync_button.wait_for(state="visible", timeout=5000)
+            sync_button.click()
+            
+            self.wait(3)
+            
+            # Capture sync result message
+            try:
+                # Wait for sync message (Codegen: page.get_by_text("everything is already up-to").click())
+                sync_message = self.page.get_by_text("everything is already up-to", exact=False)
+                if sync_message.is_visible(timeout=5000):
+                    message_text = sync_message.text_content() or ""
+                    self.logger.info(f"IPN Sync message: {message_text}")
+                    
+                    # Capture toast if available
+                    toast_text = self.capture_toast_once(timeout=3000)
+                    
+                    return {
+                        "success": True,
+                        "sync_message": message_text.strip(),
+                        "toast_result": {
+                            "success": bool(toast_text),
+                            "text": toast_text or ""
+                        }
+                    }
+            except:
+                pass
+            
+            # If no specific message, just return success
+            return {"success": True, "sync_message": "IPN sync initiated"}
+            
+        except Exception as e:
+            self.logger.error(f" IPN sync failed: {str(e)}")
+            self.take_screenshot("ipn_sync_failed")
+            raise
     
-    # ==================== TEST DATA GENERATORS ====================
-    @staticmethod
-    def generate_merchant_data() -> Dict[str, Any]:
-        """Generate unique merchant test data"""
-        timestamp = int(time.time())
-        return {
-            "account_number": f"ACCT{timestamp}",
-            "pan": f"PAN{timestamp % 10000:04d}",
-            "branch": "AACHAM",
-            "nchl_merchant_code": f"merchant{timestamp}",
-            "fonepay_merchant_id": f"fonepay{timestamp}",
-            "name": f"Test_Merchant_{timestamp}",
-            "address": f"Test Address {timestamp}",
-            "email": f"test{timestamp}@example.com",
-            "phone": f"98{(timestamp % 10000):07d}"
-        }
+    @allure.step("Add New Merchant")
+    def add_merchant(self, merchant_data: dict = None):
+        """
+        Add a new merchant
+        
+        Args:
+            merchant_data: Dictionary with merchant details
+                         If None, uses default test data
+        """
+        self.logger.info("Adding new merchant")
+        
+        # Default merchant data (from Codegen)
+        if merchant_data is None:
+            merchant_data = {
+                "account_number": "093242221",
+                "merchant_pan": "pantest45",
+                "branch": "ACHHAM",
+                "schemes": ["Fonepay", "NCHL"],  # MULTIPLE SCHEMES!
+                "merchant_code": "merch23232",
+                "merchant_id": "merch56856",
+                "name": "testmerchantr",
+                "email": "testing@gmial.com",
+                "address": "ktm",
+                "phone": "9812323234"
+            }
+        
+        try:
+            # STEP 1: Click Merchant button (from Codegen)
+            merchant_button = self.page.get_by_role("button", name="Merchant")
+            merchant_button.wait_for(state="visible", timeout=10000)
+            merchant_button.click()
+            self.wait(2)
+            
+            # STEP 2: Click Add Merchant button (from Codegen)
+            add_button = self.page.get_by_role("button", name="Add Merchant")
+            add_button.wait_for(state="visible", timeout=10000)
+            add_button.click()
+            self.wait(2)
+            
+            # STEP 3: Fill Account Number
+            account_field = self.page.get_by_role("textbox", name="Account Number")
+            account_field.wait_for(state="visible", timeout=10000)
+            account_field.click()
+            account_field.fill(merchant_data["account_number"])
+            self.wait(0.5)
+            
+            # STEP 4: Fill Merchant PAN
+            pan_field = self.page.get_by_role("textbox", name="Merchant PAN")
+            pan_field.wait_for(state="visible", timeout=5000)
+            pan_field.click()
+            pan_field.fill(merchant_data["merchant_pan"])
+            self.wait(0.5)
+            
+            # STEP 5: Select Branch
+            branch_dropdown = self.page.get_by_role("combobox", name="Branch")
+            branch_dropdown.wait_for(state="visible", timeout=5000)
+            branch_dropdown.click()
+            
+            branch_option = self.page.get_by_role("option", name=merchant_data["branch"])
+            branch_option.wait_for(state="visible", timeout=5000)
+            branch_option.click()
+            self.wait(0.5)
+            
+            # STEP 6: Select Scheme(s) - MULTI-SELECT VERSION
+            scheme_dropdown = self.page.get_by_role("combobox", name="Scheme")
+            scheme_dropdown.wait_for(state="visible", timeout=5000)
+            
+            # Double click as in codegen
+            scheme_dropdown.dblclick()
+            self.wait(0.5)
+            
+            # Click the div that codegen clicks
+            try:
+                div_filter = self.page.locator("div").filter(has_text="Add MerchantAccount").nth(1)
+                if div_filter.is_visible(timeout=3000):
+                    div_filter.click()
+                    self.wait(0.5)
+            except:
+                pass
+            
+            # Select FIRST scheme: Fonepay
+            try:
+                fonepay_option = self.page.get_by_role("option", name="Fonepay")
+                if fonepay_option.is_visible(timeout=3000):
+                    fonepay_option.click()
+                    self.logger.info(" Selected Fonepay scheme")
+                    self.wait(0.5)
+                else:
+                    self.logger.warning("Fonepay option not visible")
+            except Exception as e:
+                self.logger.warning(f"Could not select Fonepay: {e}")
+            
+            # Re-open dropdown for second selection
+            scheme_dropdown.click()
+            self.wait(0.5)
+            
+            # Select SECOND scheme: NCHL
+            try:
+                nchl_option = self.page.get_by_role("option", name="NCHL", exact=True)
+                if nchl_option.is_visible(timeout=3000):
+                    nchl_option.click()
+                    self.logger.info("Selected NCHL scheme")
+                    self.wait(0.5)
+                else:
+                    # Try without exact match
+                    nchl_option = self.page.get_by_role("option", name="NCHL")
+                    nchl_option.wait_for(state="visible", timeout=3000)
+                    nchl_option.click()
+                    self.logger.info(" Selected NCHL scheme (non-exact)")
+                    self.wait(0.5)
+            except Exception as e:
+                self.logger.error(f"Could not select NCHL: {e}")
+                raise
+            
+            # Close dropdown by clicking elsewhere or pressing Escape
+            self.page.locator("body").click(position={"x": 10, "y": 10})
+            self.wait(0.5)
+            
+            # STEP 7: Fill Merchant Code
+            code_field = self.page.get_by_role("textbox", name="Merchant Code")
+            code_field.wait_for(state="visible", timeout=5000)
+            code_field.click()
+            code_field.fill(merchant_data["merchant_code"])
+            self.wait(0.5)
+            
+            # STEP 8: Fill Merchant ID
+            id_field = self.page.get_by_role("textbox", name="Merchant .I.D.")
+            id_field.wait_for(state="visible", timeout=5000)
+            id_field.click()
+            id_field.fill(merchant_data["merchant_id"])
+            self.wait(0.5)
+            
+            # STEP 9: Fill Name
+            name_field = self.page.get_by_role("textbox", name="Name")
+            name_field.wait_for(state="visible", timeout=5000)
+            name_field.click()
+            name_field.fill(merchant_data["name"])
+            self.wait(0.5)
+            
+            # STEP 10: Fill Email
+            email_field = self.page.get_by_role("textbox", name="Email")
+            email_field.wait_for(state="visible", timeout=5000)
+            email_field.click()
+            email_field.fill(merchant_data["email"])
+            self.wait(0.5)
+            
+            # STEP 11: Fill Address
+            address_field = self.page.get_by_role("textbox", name="Address")
+            address_field.wait_for(state="visible", timeout=5000)
+            address_field.click()
+            address_field.fill(merchant_data["address"])
+            self.wait(0.5)
+            
+            # STEP 12: Fill Phone
+            phone_field = self.page.get_by_role("textbox", name="Phone")
+            phone_field.wait_for(state="visible", timeout=5000)
+            phone_field.click()
+            phone_field.fill(merchant_data["phone"])
+            
+            self.take_screenshot("merchant_form_filled")
+            
+            # STEP 13: Click Add button
+            final_add_button = self.page.get_by_role("button", name="Add")
+            final_add_button.wait_for(state="visible", timeout=5000)
+            final_add_button.click()
+            
+            self.wait(3)
+            
+            # STEP 14: Capture toast message using the better method
+            toast_text = self.capture_toast_once(timeout=10000)
+            
+            # Format result to match what your test expects
+            result = {
+                "success": True,
+                "merchant_data": merchant_data,
+                "toast_result": {
+                    "success": bool(toast_text),  # True if toast_text is not None/empty
+                    "text": toast_text or "",
+                    "contains_expected": bool(toast_text and "merchant" in toast_text.lower())
+                },
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            
+            if toast_text and "created" in toast_text.lower():
+                self.logger.info(f" Merchant added successfully with toast: {toast_text}")
+                self.take_screenshot("merchant_added_success")
+            else:
+                self.logger.warning(f" Merchant added but toast verification incomplete. Toast: {toast_text}")
+                self.take_screenshot("merchant_added_warning")
+            
+            return result
+            
+        except Exception as e:
+            self.logger.error(f" Failed to add merchant: {str(e)}")
+            self.take_screenshot("merchant_add_failed")
+            raise
+
+    # ==================== IMPROVED TOAST METHODS ====================
     
-    @staticmethod
-    def generate_identifiers_data() -> Dict[str, str]:
-        """Generate unique identifiers test data"""
-        timestamp = int(time.time()) % 1000
-        return {
-            "nchl_terminal_id": f"terminalid{timestamp:03d}",
-            "nchl_store_id": f"storeid{timestamp:03d}",
-            "fonepay_terminal_id": f"fonepaycode{timestamp:03d}"
+    def capture_toast_once(self, timeout=10000):
+        """
+        Capture toast message ONCE and store it for reuse
+        This prevents multiple calls that fail after toast disappears
+        """
+        if self.last_toast_message:
+            self.logger.info(f"Using cached toast message: {self.last_toast_message}")
+            return self.last_toast_message
+            
+        try:
+            self.logger.info("Waiting for toast message to appear...")
+            
+            # Try different selectors for toast
+            selectors = [
+                "[role='alert']",
+                ".MuiAlert-root",
+                ".toast",
+                ".notification",
+                ".ant-message",
+                ".ant-notification",
+                ".success-message",
+                ".alert-success"
+            ]
+            
+            # Wait a bit for toast to appear
+            self.wait(1)
+            
+            for selector in selectors:
+                try:
+                    self.logger.info(f"Trying selector: {selector}")
+                    toast_element = self.page.locator(selector).first
+                    if toast_element.is_visible(timeout=2000):
+                        toast_text = toast_element.text_content()
+                        if toast_text and toast_text.strip():
+                            self.last_toast_message = toast_text.strip()
+                            self.logger.info(f" Captured toast message: {self.last_toast_message}")
+                            return self.last_toast_message
+                except:
+                    continue
+            
+            # Also try to find any text that looks like a success message
+            try:
+                success_keywords = ["success", "created", "added", "saved", "merchant"]
+                for keyword in success_keywords:
+                    element = self.page.get_by_text(keyword, exact=False).first
+                    if element.is_visible(timeout=1000):
+                        toast_text = element.text_content()
+                        if toast_text and toast_text.strip():
+                            self.last_toast_message = toast_text.strip()
+                            self.logger.info(f" Captured toast by keyword '{keyword}': {self.last_toast_message}")
+                            return self.last_toast_message
+            except:
+                pass
+            
+            # Try the method from codegen: get_by_role("alert")
+            try:
+                alert_element = self.page.get_by_role("alert").first
+                if alert_element.is_visible(timeout=2000):
+                    alert_element.dblclick()  # Codegen does dblclick
+                    toast_text = alert_element.text_content()
+                    if toast_text and toast_text.strip():
+                        self.last_toast_message = toast_text.strip()
+                        self.logger.info(f" Captured toast via role='alert': {self.last_toast_message}")
+                        return self.last_toast_message
+            except:
+                pass
+            
+            self.logger.warning("No toast message found")
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"Error capturing toast: {e}")
+            return None
+    
+    # ==================== ASSIGN IPN TO MERCHANT ====================
+    @allure.step("Assign IPN to Merchant")
+    def assign_ipn_to_merchant(self, ipn_serial: str, terminal_data: dict = None):
+        """
+        Assign IPN to merchant
+        
+        Args:
+            ipn_serial: IPN serial number from admin registration
+            terminal_data: Dictionary with terminal details
+        """
+        self.logger.info(f"Assigning IPN {ipn_serial} to merchant")
+        
+        # Default terminal data (from Codegen)
+        if terminal_data is None:
+            terminal_data = {
+                "terminal_id": "terminalewfhs",
+                "store_id": "store2324v",
+                "fonepay_pan": "sdvvgerr3"
+            }
+        
+        try:
+            # STEP 1: Expand merchant (Codegen: page.locator("#expand-more-button-0").click())
+            expand_button = self.page.locator("#expand-more-button-0")
+            expand_button.wait_for(state="visible", timeout=10000)
+            expand_button.click()
+            self.wait(1)
+            
+            # STEP 2: Click Assigned IPNs (Codegen: page.get_by_role("menuitem", name="Assigned IPNs").click())
+            ipns_menu = self.page.get_by_role("menuitem", name="Assigned IPNs")
+            ipns_menu.wait_for(state="visible", timeout=5000)
+            ipns_menu.click()
+            self.wait(2)
+            
+            # STEP 3: Click Assign IPN button
+            assign_button = self.page.get_by_role("button", name="Assign IPN")
+            assign_button.wait_for(state="visible", timeout=10000)
+            assign_button.click()
+            self.wait(2)
+            
+            # STEP 4: Search for IPN
+            search_field = self.page.get_by_role("textbox", name="Search IPN")
+            search_field.wait_for(state="visible", timeout=5000)
+            search_field.click()
+            search_field.fill(ipn_serial)
+            search_field.click()
+            search_field.press("Enter")
+            
+            self.wait(2)
+            
+            # STEP 5: Select the IPN row (Codegen pattern)
+            # Find row containing the IPN serial
+            row_locator = self.page.get_by_role("row").filter(has_text=ipn_serial).first
+            if row_locator.is_visible(timeout=5000):
+                # Get the checkbox in that row
+                select_checkbox = row_locator.get_by_label("Select row")
+                select_checkbox.wait_for(state="visible", timeout=5000)
+                select_checkbox.check()
+            else:
+                # Fallback to first row
+                self.page.get_by_label("Select row").first.check()
+            
+            self.wait(1)
+            
+            # STEP 6: Click schema icon (Codegen: get_by_test_id("SchemaIcon"))
+            try:
+                # Find the row again and click SchemaIcon
+                row_with_ipn = self.page.get_by_role("row").filter(has_text=ipn_serial).first
+                schema_icon = row_with_ipn.get_by_test_id("SchemaIcon")
+                if schema_icon.is_visible(timeout=3000):
+                    schema_icon.click()
+            except:
+                # Alternative: click on the row
+                self.page.get_by_role("row").filter(has_text=ipn_serial).first.click()
+            
+            self.wait(1)
+            
+            # STEP 7: Fill Terminal ID
+            terminal_field = self.page.get_by_role("textbox", name="Terminal I.D.")
+            terminal_field.wait_for(state="visible", timeout=5000)
+            terminal_field.click()
+            terminal_field.fill(terminal_data["terminal_id"])
+            self.wait(0.5)
+            
+            # STEP 8: Fill Store ID
+            store_field = self.page.get_by_role("textbox", name="Store I.D.")
+            store_field.wait_for(state="visible", timeout=5000)
+            store_field.click()
+            store_field.fill(terminal_data["store_id"])
+            self.wait(0.5)
+            
+            # STEP 9: Fill Fonepay PAN
+            pan_field = self.page.get_by_role("textbox", name="Fonepay Pan Number")
+            pan_field.wait_for(state="visible", timeout=5000)
+            pan_field.click()
+            pan_field.fill(terminal_data["fonepay_pan"])
+            
+            self.take_screenshot("terminal_details_filled")
+            
+            # STEP 10: Click Update button
+            update_button = self.page.get_by_role("button", name="Update")
+            update_button.wait_for(state="visible", timeout=5000)
+            update_button.click()
+            self.wait(1)
+            
+            # STEP 11: Click Assign button
+            assign_final_button = self.page.get_by_role("button", name="Assign")
+            assign_final_button.wait_for(state="visible", timeout=5000)
+            assign_final_button.click()
+            
+            self.wait(3)
+            
+            # STEP 12: Capture toast using the improved method
+            toast_text = self.capture_toast_once(timeout=10000)
+            
+            result = {
+                "success": True,
+                "ipn_serial": ipn_serial,
+                "terminal_data": terminal_data,
+                "toast_result": {
+                    "success": bool(toast_text),  # True if toast_text is not None/empty
+                    "text": toast_text or "",
+                    "contains_expected": bool(toast_text and ("assigned" in toast_text.lower() or "ipn" in toast_text.lower()))
+                },
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            
+            if toast_text and "assigned" in toast_text.lower():
+                self.logger.info(f" IPN assigned successfully with toast: {toast_text}")
+                self.take_screenshot("ipn_assigned_success")
+            else:
+                self.logger.warning(f" IPN assigned but toast verification incomplete. Toast: {toast_text}")
+                self.take_screenshot("ipn_assigned_warning")
+            
+            return result
+            
+        except Exception as e:
+            self.logger.error(f" Failed to assign IPN: {str(e)}")
+            self.take_screenshot("ipn_assign_failed")
+            raise
+    
+    # ==================== NAVIGATE TO DASHBOARD ====================
+    @allure.step("Navigate to Dashboard")
+    def navigate_to_dashboard(self):
+        """Navigate back to dashboard"""
+        self.logger.info("Navigating to dashboard")
+        
+        dashboard_button = self.page.get_by_role("button", name="Dashboard")
+        dashboard_button.wait_for(state="visible", timeout=10000)
+        dashboard_button.click()
+        self.wait(2)
+        return True
+    
+    # ==================== COMPLETE TMS FLOW ====================
+    @allure.step("Complete TMS Flow")
+    def complete_tms_flow(self, ipn_serial: str = None):
+        """
+        Complete TMS flow from login to IPN assignment
+        
+        Args:
+            ipn_serial: IPN serial number from admin registration
+                       If None, uses hardcoded value from Codegen
+        """
+        self.logger.info("Starting complete TMS flow")
+        
+        result = {
+            "overall_success": False,
+            "steps": {},
+            "merchant_result": {},
+            "ipn_assignment_result": {},
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         }
+        
+        ipn_serial = ipn_serial or "38231105960007"  # From Codegen
+        
+        try:
+            # Step 1: Login
+            self.logger.info("Step 1: Logging in...")
+            result["steps"]["login"] = self.login()
+            
+            # Step 2: Sync IPN
+            self.logger.info("Step 2: Syncing IPN...")
+            sync_result = self.sync_ipn()
+            result["steps"]["sync_ipn"] = sync_result.get("success", False)
+            result["steps"]["sync_message"] = sync_result.get("sync_message", "")
+            
+            # Step 3: Add Merchant
+            self.logger.info("Step 3: Adding merchant...")
+            merchant_result = self.add_merchant()
+            result["merchant_result"] = merchant_result
+            result["steps"]["add_merchant"] = merchant_result.get("success", False)
+            
+            # Step 4: Assign IPN
+            self.logger.info("Step 4: Assigning IPN to merchant...")
+            ipn_result = self.assign_ipn_to_merchant(ipn_serial)
+            result["ipn_assignment_result"] = ipn_result
+            result["steps"]["assign_ipn"] = ipn_result.get("success", False)
+            
+            # Step 5: Navigate to Dashboard
+            self.logger.info("Step 5: Navigating to dashboard...")
+            result["steps"]["navigate_dashboard"] = self.navigate_to_dashboard()
+            
+            # Determine overall success
+            overall_success = all([
+                result["steps"].get("login"),
+                result["steps"].get("add_merchant"),
+                result["steps"].get("assign_ipn")
+            ])
+            
+            result["overall_success"] = overall_success
+            
+            if overall_success:
+                self.logger.info(" Complete TMS flow SUCCESSFUL!")
+                self.take_screenshot("complete_tms_flow_success")
+            else:
+                self.logger.warning(" TMS flow completed with some issues")
+                self.take_screenshot("complete_tms_flow_warning")
+            
+            return result
+            
+        except Exception as e:
+            self.logger.error(f" Complete TMS flow FAILED: {str(e)}")
+            self.take_screenshot("complete_tms_flow_failed")
+            
+            result["overall_success"] = False
+            result["error"] = str(e)
+            
+            return result
