@@ -80,15 +80,19 @@ class MongoHandler:
             }
             
             # Parse and enhance connection string
-            if "?" in self.connection_string:
-                self.client = MongoClient(self.connection_string, **connection_params)
-            else:
-                params = urllib.parse.urlencode({
-                    'retryWrites': 'false',
-                    'maxIdleTimeMS': '120000'
-                })
-                enhanced_uri = f"{self.connection_string}/?{params}"
-                self.client = MongoClient(enhanced_uri, **connection_params)
+            # For Azure Cosmos DB, we might need to be careful with extra params if using SRV
+            # Increasing timeout significantly for slow connections
+            
+            # Simplified connection approach - let pymongo handle parsing mostly
+            # but ensure SSL/TLS is on which is default for Cosmos
+            
+            self.client = MongoClient(
+                self.connection_string,
+                serverSelectionTimeoutMS=self.timeout_ms * 3, # 30s
+                connectTimeoutMS=self.timeout_ms * 3,
+                socketTimeoutMS=self.timeout_ms * 3,
+                
+            )
             
             # Test connection
             self.client.admin.command('ping')

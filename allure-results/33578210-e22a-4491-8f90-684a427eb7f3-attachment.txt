@@ -1,4 +1,0 @@
-[1m[31mERROR   [0m pages.admin_portal.device_registration_page:device_registration_page.py:256 ❌ Device registration failed: Error: strict mode violation: locator("div").filter(has_text="Koili Admin") resolved to 3 elements:
-    1) <div id="root">…</div> aka locator("#root")
-    2) <div class="MuiBox-root css-k008qs">…</div> aka get_by_text("Koili AdminWelcome,")
-    3) <div class="MuiToolbar-root MuiToolbar-gutters MuiToo…>…</div> aka locator("div").filter(has_text=re.compile(r"^Koili Admin$"))

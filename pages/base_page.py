@@ -49,6 +49,7 @@ class BasePage:
                 ".Toastify__toast--success",  # Admin success toast
                 ".Toastify__toast-container",  # Admin toast container
                 "[role='alert']",  # TMS Portal (Material-UI alert)
+                "[data-testid^='toast-']",  # User suggested TestID pattern (e.g. toast-profile-updated)
                 ".MuiSnackbar-root",  # TMS (Material-UI snackbar)
                 ".MuiAlert-root",  # TMS (Material-UI alert)
                 ".ant-message",  # Ant Design
@@ -75,7 +76,7 @@ class BasePage:
                         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
                     }
                     
-                    self.logger.info(f"✅ Toast captured: '{toast_text.strip()}'")
+                    self.logger.info(f"Toast captured: '{toast_text.strip()}'")
                     self.take_screenshot(f"toast_{int(time.time())}")
                     
                     return toast_details
@@ -102,7 +103,7 @@ class BasePage:
                             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
                         }
                         
-                        self.logger.info(f"✅ Success message found: '{element_text.strip()}'")
+                        self.logger.info(f" Success message found: '{element_text.strip()}'")
                         return toast_details
             except:
                 pass
@@ -111,7 +112,7 @@ class BasePage:
             
         except Exception as e:
             elapsed_time = int((time.time() - start_time) * 1000)
-            self.logger.error(f"❌ Failed to capture toast: {e} (waited {elapsed_time}ms)")
+            self.logger.error(f"Failed to capture toast: {e} (waited {elapsed_time}ms)")
             
             return {
                 "success": False,
@@ -128,10 +129,10 @@ class BasePage:
         toast_result = self.capture_toast_message(expected_text, timeout)
         
         if toast_result["success"] and toast_result.get("contains_expected"):
-            self.logger.info(f"✅ Toast verified: '{toast_result['text']}'")
+            self.logger.info(f"Toast verified: '{toast_result['text']}'")
             return toast_result
         else:
-            self.logger.warning(f"⚠️ Toast verification failed. Expected: '{expected_text}', Got: '{toast_result.get('text', 'NO TEXT')}'")
+            self.logger.warning(f" Toast verification failed. Expected: '{expected_text}', Got: '{toast_result.get('text', 'NO TEXT')}'")
             return toast_result
     
     def wait_for_toast_and_capture(self, expected_text: str = None, timeout: int = 15000):
@@ -164,7 +165,7 @@ class BasePage:
                 
         except Exception as e:
             elapsed_time = int((time.time() - start_time) * 1000)
-            self.logger.error(f"❌ Failed to capture toast: {e} (waited {elapsed_time}ms)")
+            self.logger.error(f"Failed to capture toast: {e} (waited {elapsed_time}ms)")
             
             return {
                 "success": False,
@@ -537,42 +538,20 @@ class BasePage:
                 "toast_type": "Toastify"
             }
             
-            self.logger.info(f"✅ Admin toast captured: '{toast_text.strip()}'")
+            self.logger.info(f" Admin toast captured: '{toast_text.strip()}'")
             return result
             
         except Exception as e:
-            self.logger.error(f"❌ Failed to capture Admin toast: {e}")
+            self.logger.error(f" Failed to capture Admin toast: {e}")
             return {"success": False, "error": str(e), "app_type": "admin"}
     
     def capture_tms_toast(self, expected_text: str = None, timeout: int = 15000):
         """
-        Specifically for TMS Portal toast messages (Material-UI)
+        Specifically for TMS Portal toast messages - Delegates to universal capture
+        because TMS might use Alerts, Snackbars, or custom TestID toasts.
         """
-        self.logger.info(f"Waiting for TMS Portal toast: '{expected_text}'")
-        
-        try:
-            # TMS uses Material-UI - wait for alert
-            self.page.locator("[role='alert']").wait_for(
-                state="visible", timeout=timeout
-            )
-            
-            alert = self.page.locator("[role='alert']")
-            alert_text = alert.text_content(timeout=2000) or ""
-            
-            result = {
-                "success": True,
-                "text": alert_text.strip(),
-                "contains_expected": expected_text.lower() in alert_text.lower() if expected_text else True,
-                "app_type": "tms",
-                "toast_type": "Material-UI"
-            }
-            
-            self.logger.info(f"✅ TMS toast captured: '{alert_text.strip()}'")
-            return result
-            
-        except Exception as e:
-            self.logger.error(f"❌ Failed to capture TMS toast: {e}")
-            return {"success": False, "error": str(e), "app_type": "tms"}
+        self.logger.info(f"Waiting for TMS Portal toast (Robust): '{expected_text}'")
+        return self.capture_toast_message(expected_text, timeout)
     
     # ==================== VALIDATION HELPER METHODS ====================
     
@@ -613,8 +592,8 @@ class BasePage:
         }
         
         # Log report summary
-        self.logger.info(f"📊 Test Report: {test_name}")
-        self.logger.info(f"   Status: {'✅ PASSED' if report['overall_success'] else '❌ FAILED'}")
+        self.logger.info(f" Test Report: {test_name}")
+        self.logger.info(f"   Status: {' PASSED' if report['overall_success'] else ' FAILED'}")
         
         if report.get("toast_verification", {}).get("success"):
             self.logger.info(f"   Toast: '{report['toast_verification'].get('text', '')}'")

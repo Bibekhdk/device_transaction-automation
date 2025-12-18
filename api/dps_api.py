@@ -20,14 +20,14 @@ class DPSAPI(BaseAPI):
         """
         # Use provided URL or default
         if not base_url:
-            base_url = "dps-staging.koilifin.com"
+            base_url = "https://dps-staging.koilifin.com"
         
         # Get token from parameter, env, or use placeholder
         if not auth_token:
             auth_token = os.getenv("DPS_AUTH_TOKEN", "YOUR_FIXED_DPS_TOKEN_HERE")
         
         # Initialize with auth_token (DPS seems to use token auth)
-        super().__init__(base_url, auth_token=auth_token, auth_type='token')
+        super().__init__(base_url, auth_token=auth_token, auth_type='bearer')
         
         # Store the actual token for reference
         self.dps_token = auth_token
@@ -65,11 +65,11 @@ class DPSAPI(BaseAPI):
             # Validate response format
             self._validate_dps_response(response, serial_number)
             
-            logger.info(f"✅ DPS request successful for {serial_number}")
+            logger.info(f" DPS request successful for {serial_number}")
             return response
                 
         except Exception as e:
-            logger.error(f"❌ DPS request failed for {serial_number}: {str(e)}")
+            logger.error(f"DPS request failed for {serial_number}: {str(e)}")
             raise
     
     def _log_response_safely(self, response: Dict):
@@ -120,10 +120,10 @@ class DPSAPI(BaseAPI):
         """Verify DPS response is valid"""
         try:
             self._validate_dps_response(response, serial_number)
-            logger.info(f"✅ DPS response verified for device {serial_number}")
+            logger.info(f" DPS response verified for device {serial_number}")
             return True
         except Exception as e:
-            logger.error(f"❌ DPS response verification failed for {serial_number}: {e}")
+            logger.error(f" DPS response verification failed for {serial_number}: {e}")
             return False
     
     @allure.step("Check DPS status")

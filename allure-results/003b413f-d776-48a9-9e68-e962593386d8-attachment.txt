@@ -1,2 +1,0 @@
-[1m[31mERROR   [0m pages.base_page:tms_full_flow.py:293 ❌ Failed to add merchant: Timeout 5000ms exceeded.
-[1m[31mERROR   [0m pages.base_page:tms_full_flow.py:568 ❌❌❌ Complete TMS flow FAILED: Timeout 5000ms exceeded.

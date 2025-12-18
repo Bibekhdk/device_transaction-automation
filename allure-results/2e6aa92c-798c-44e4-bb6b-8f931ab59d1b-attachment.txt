@@ -1,2 +1,0 @@
-[31m[1mERROR   [0m pages.base_page:base_page.py:53 Timeout waiting for element: Device Menu
-[31m[1mERROR   [0m pages.base_page:device_registration_page.py:217 Registration failed: Timeout 30000ms exceeded.

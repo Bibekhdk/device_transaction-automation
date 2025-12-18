@@ -1,2 +1,0 @@
-[33mWARNING [0m pages.admin_portal.device_registration_page:device_registration_page.py:590 ⚠️ Could not verify success message
-[33mWARNING [0m pages.admin_portal.device_registration_page:device_registration_page.py:455 ⚠️ Device registration may have issues

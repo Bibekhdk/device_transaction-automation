@@ -1,3 +1,0 @@
-[33mWARNING [0m pages.base_page:tms_full_flow.py:313 ⚠️ Merchant added but toast verification incomplete. Toast: Merchant
-[33mWARNING [0m pages.base_page:tms_full_flow.py:529 ⚠️ IPN assigned but toast verification incomplete. Toast: Merchant
-[33mWARNING [0m tests.test_tms_full_flow:test_tms_full_flow.py:84 ⚠️ IPN toast doesn't contain expected keywords. Actual: 'merchant'

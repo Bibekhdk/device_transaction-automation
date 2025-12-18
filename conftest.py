@@ -6,6 +6,11 @@ from playwright.sync_api import Page, BrowserContext, Browser
 import allure
 import logging
 
+import logging
+from dotenv import load_dotenv
+
+load_dotenv()
+
 logger = logging.getLogger(__name__)
 
 # ==================== PLAYWRIGHT FIXTURES ====================

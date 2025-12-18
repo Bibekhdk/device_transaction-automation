@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class IPNAPI(BaseAPI):
     """Client for IPN (Instant Payment Notification) API"""
     
-    def __init__(self, base_url: str = None, scheme: str = "nchl"):
+    def __init__(self, base_url: str = None, scheme: str = "nchl", **kwargs):
         """
         Initialize IPN API client
         
@@ -23,9 +23,11 @@ class IPNAPI(BaseAPI):
             base_url = "https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify"
         
         # Get API key based on scheme
-        api_key = os.getenv(
-            "NCHL_API_KEY" if scheme == "nchl" else "FONEPAY_API_KEY"
-        )
+        api_key = kwargs.get("api_key")
+        if not api_key:
+            api_key = os.getenv(
+                "NCHL_API_KEY" if scheme == "nchl" else "FONEPAY_API_KEY"
+            )
         
         if not api_key:
             logger.warning(f"API key not found for scheme: {scheme}")
@@ -38,7 +40,7 @@ class IPNAPI(BaseAPI):
         logger.info(f"IPN API initialized for {scheme.upper()} scheme")
         logger.debug(f"Base URL: {base_url}")
     
-    @allure.step("Send {scheme} transaction notification")
+    @allure.step("Send transaction notification")
     def send_transaction(
         self, 
         amount: str, 
@@ -77,7 +79,7 @@ class IPNAPI(BaseAPI):
             # Validate response
             expected_message = "notification delivered successfully"
             if response.get('message') == expected_message:
-                logger.info(f"✅ {self.scheme.upper()} transaction successful: {amount}")
+                logger.info(f" {self.scheme.upper()} transaction successful: {amount}")
                 return response
             else:
                 error_msg = f"{self.scheme.upper()} transaction failed: {response}"
@@ -85,7 +87,7 @@ class IPNAPI(BaseAPI):
                 raise Exception(error_msg)
                 
         except Exception as e:
-            logger.error(f"❌ {self.scheme.upper()} transaction failed: {str(e)}")
+            logger.error(f" {self.scheme.upper()} transaction failed: {str(e)}")
             raise
     
     @allure.step("Send NCHL transaction")
@@ -109,7 +111,7 @@ class IPNAPI(BaseAPI):
             Response from IPN API
         """
         # Create NCHL-specific client
-        nchl_client = IPNAPI(scheme="nchl")
+        nchl_client = IPNAPI(scheme="nchl", api_key=self.api_key if self.scheme == 'nchl' else None)
         
         return nchl_client.send_transaction(
             amount=amount,
@@ -137,7 +139,7 @@ class IPNAPI(BaseAPI):
             Response from IPN API
         """
         # Create Fonepay-specific client
-        fonepay_client = IPNAPI(scheme="fonepay")
+        fonepay_client = IPNAPI(scheme="fonepay", api_key=self.api_key if self.scheme == 'fonepay' else None)
         
         return fonepay_client.send_transaction(
             amount=amount,
