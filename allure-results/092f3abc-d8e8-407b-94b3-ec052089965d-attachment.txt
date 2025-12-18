@@ -1,0 +1,23 @@
+
+        Test Execution Summary:
+        ----------------------
+        Timestamp: 20251218_234159
+        Total Steps: 9
+        Passed Steps: 8
+        Failed Steps: 1
+        Skipped Steps: 0
+        
+        Data Created During Test:
+        -------------------------
+        Device Serial: 38231105960007
+        Merchant Code (created in TMS): M6999899829
+        Merchant ID (created in TMS): F4257997970
+        Terminal ID (assigned in TMS): TERM_80614886
+        Store ID (assigned in TMS): STORE_755203
+        Fonepay Terminal ID (assigned in TMS): FONEPAY_80063887
+        
+        API Transaction Data Used:
+        --------------------------
+        NCHL: M6999899829 | TERM_80614886 | STORE_755203
+        Fonepay: F4257997970 | FONEPAY_80063887
+        

@@ -11,7 +11,7 @@ class TMSLocators:
     
     # Dashboard / Navigation
     NAV_IPN = {"role": "button", "name": "IPN", "exact": True}
-    NAV_MERCHANT = {"role": "button", "name": "Merchant"}
+    NAV_MERCHANT = {"role": "button", "name": "Merchant", "exact": True}
     NAV_DASHBOARD = {"role": "button", "name": "Dashboard"}
     
     # IPN Management

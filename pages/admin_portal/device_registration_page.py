@@ -19,14 +19,13 @@ class DeviceRegistrationPage(BasePage):
     def __init__(self, page: Page):
         super().__init__(page)
         self.locators = AdminLocators
+
+        # Device serial no hardcoded
+        self.test_serial_number = "38231105960007"  # Your hardcoded serial
     
     # ==================== DATA GENERATION ====================
     def generate_random_sim(self):
         """Generate random SIM number"""
-        return str(random.randint(1000000000, 9999999999))
-    
-    def generate_random_serial(self):
-        """Generate random serial number"""
         return str(random.randint(1000000000, 9999999999))
     
     def generate_random_imei(self):
@@ -95,12 +94,14 @@ class DeviceRegistrationPage(BasePage):
         return True
 
     @allure.step("Fill Device Form")
-    def fill_device_form(self, customer="Anugya"):
+    def fill_device_form(self, customer="Test"):
         """Fill device details"""
         try:
             sim = self.generate_random_sim()
-            serial = self.generate_random_serial()
+            serial = self.test_serial_number  # Use hardcoded serial instead of random
             imei = self.generate_random_imei()
+            
+            logger.info(f"Using hardcoded serial: {serial}")
             
             # Fill SIM
             self.fill_by_role(**self.locators.FORM_SIM, text=sim)
@@ -114,7 +115,13 @@ class DeviceRegistrationPage(BasePage):
             # Select Customer
             self.page.get_by_role(**self.locators.FORM_CUSTOMER_DROPDOWN).click()
             self.wait(0.5)
-            self.page.get_by_role(**self.locators.FORM_CUSTOMER_BITSKRAFT).click()
+
+            # Choose customer - comment/uncomment as needed
+            if customer == "Test":
+                self.page.get_by_role(**self.locators.FORM_CUSTOMER_TEST).click()
+            else:
+                self.page.get_by_role(**self.locators.FORM_CUSTOMER_BITSKRAFT).click()
+            self.wait(0.5)
 
             # Select Language
             self.click_by_role(**self.locators.FORM_LANGUAGE_DROPDOWN)

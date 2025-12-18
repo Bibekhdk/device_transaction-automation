@@ -1,0 +1,27 @@
+[31m[1mERROR   [0m pages.base_page:base_page.py:545  Failed to capture Admin toast: Timeout 15000ms exceeded.
+[33mWARNING [0m pages.base_page:device_registration_page.py:204  Registration completed with issues
+[33mWARNING [0m pages.base_page:tms_page.py:308  Unexpected Toast Content: IPN assigned to merchant successfully
+[33mWARNING [0m api.base_api:base_api.py:120 Request returned 404: {"message":"device or merchant not registered","responseCode":"3"}
+[31m[1mERROR   [0m api.base_api:base_api.py:145 HTTP error Unknown for https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify
+[33mWARNING [0m utils.helpers:helpers.py:36 Attempt 1 failed: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify. Retrying in 2s...
+[33mWARNING [0m api.base_api:base_api.py:120 Request returned 404: {"message":"device or merchant not registered","responseCode":"3"}
+[31m[1mERROR   [0m api.base_api:base_api.py:145 HTTP error Unknown for https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify
+[33mWARNING [0m utils.helpers:helpers.py:36 Attempt 2 failed: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify. Retrying in 4s...
+[33mWARNING [0m api.base_api:base_api.py:120 Request returned 404: {"message":"device or merchant not registered","responseCode":"3"}
+[31m[1mERROR   [0m api.base_api:base_api.py:145 HTTP error Unknown for https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify
+[31m[1mERROR   [0m utils.helpers:helpers.py:39 All 3 attempts failed for _make_request
+[31m[1mERROR   [0m api.ipn_api:ipn_api.py:90  NCHL transaction failed: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify
+[31m[1mERROR   [0m antittest.tests.test_full_flow:test_full_flow.py:492 ❌ NCHL error: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify
+[33mWARNING [0m api.base_api:base_api.py:120 Request returned 404: {"message":"device or merchant not registered","responseCode":"3"}
+[31m[1mERROR   [0m api.base_api:base_api.py:145 HTTP error Unknown for https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify
+[33mWARNING [0m utils.helpers:helpers.py:36 Attempt 1 failed: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify. Retrying in 2s...
+[33mWARNING [0m api.base_api:base_api.py:120 Request returned 404: {"message":"device or merchant not registered","responseCode":"3"}
+[31m[1mERROR   [0m api.base_api:base_api.py:145 HTTP error Unknown for https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify
+[33mWARNING [0m utils.helpers:helpers.py:36 Attempt 2 failed: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify. Retrying in 4s...
+[33mWARNING [0m api.base_api:base_api.py:120 Request returned 404: {"message":"device or merchant not registered","responseCode":"3"}
+[31m[1mERROR   [0m api.base_api:base_api.py:145 HTTP error Unknown for https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify
+[31m[1mERROR   [0m utils.helpers:helpers.py:39 All 3 attempts failed for _make_request
+[31m[1mERROR   [0m api.ipn_api:ipn_api.py:90  FONEPAY transaction failed: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify
+[31m[1mERROR   [0m antittest.tests.test_full_flow:test_full_flow.py:521 ❌ Fonepay error: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify
+[31m[1mERROR   [0m antittest.tests.test_full_flow:test_full_flow.py:534 ❌ Both transactions failed | NCHL: NCHL error: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify | Fonepay: Fonepay error: 404 Client Error: Not Found for url: https://ipn-dev.qrsoundboxnepal.com/api/v1-stg/notify
+[33mWARNING [0m antittest.tests.test_full_flow:test_full_flow.py:659 ⚠️ No transactions were sent successfully - check if merchant/device data is registered in payment system

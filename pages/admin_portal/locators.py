@@ -22,7 +22,7 @@ class AdminLocators:
     
     # Selector for Customer dropdown
     FORM_CUSTOMER_DROPDOWN = {"role": "combobox", "name": "​", "exact": True}
-    FORM_CUSTOMER_TEST = {"role": "option", "name": "Test"}   #use this during test
+    FORM_CUSTOMER_TEST = {"role": "option", "name": "Test", "exact": True}   #use this during test
     # FORM_CUSTOMER_BITSKRAFT = {"role": "option", "name": "Bitskraft Private Limited"} use this during real tests
     
   
