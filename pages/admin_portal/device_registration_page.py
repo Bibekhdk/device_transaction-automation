@@ -21,7 +21,7 @@ class DeviceRegistrationPage(BasePage):
         self.locators = AdminLocators
 
         # Device serial no hardcoded
-        self.test_serial_number = "38231105960007"  # Your hardcoded serial
+        self.test_serial_number = "38231105740018"  # Your hardcoded serial
     
     # ==================== DATA GENERATION ====================
     def generate_random_sim(self):
@@ -117,7 +117,7 @@ class DeviceRegistrationPage(BasePage):
             self.wait(0.5)
 
             # Choose customer - comment/uncomment as needed
-            if customer == "Test":
+            if customer == "TMS Staging":
                 self.page.get_by_role(**self.locators.FORM_CUSTOMER_TEST).click()
             else:
                 self.page.get_by_role(**self.locators.FORM_CUSTOMER_BITSKRAFT).click()

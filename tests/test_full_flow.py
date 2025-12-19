@@ -127,7 +127,7 @@ class TestComplete9StepDeviceTransactionFlow:
         Merchant ID (created in TMS): {summary['context_data'].get('merchant_id', 'N/A')}
         Terminal ID (assigned in TMS): {summary['context_data'].get('terminal_id', 'N/A')}
         Store ID (assigned in TMS): {summary['context_data'].get('store_id', 'N/A')}
-        Fonepay Terminal ID (assigned in TMS): {summary['context_data'].get('fonepay_terminal_id', 'N/A')}
+        Fonepay Terminal ID (PAN from TMS): {summary['context_data'].get('fonepay_terminal_id', 'N/A')}
         
         API Transaction Data Used:
         --------------------------
@@ -147,7 +147,7 @@ class TestComplete9StepDeviceTransactionFlow:
         4. TMS Portal Login
         5. Create Test Merchant (generates merchant_code, merchant_id)
         6. Sync IPN
-        7. Assign Device to Merchant (generates terminal_id, store_id)
+        7. Assign Device to Merchant (generates terminal_id, store_id, fonepay_pan)
         8. Send Transaction Notifications (USES DATA FROM STEPS 5 & 7)
         9. Verify in MongoDB
         """
@@ -185,7 +185,7 @@ class TestComplete9StepDeviceTransactionFlow:
                 logger.info("STEP 2: DEVICE REGISTRATION")
                 logger.info("="*60)
                 
-                registration_result = self.admin_page.complete_registration_with_toast(customer="Test")
+                registration_result = self.admin_page.complete_registration_with_toast(customer="TMS Staging")
                 
                 # Always use hardcoded serial regardless of registration result
                 device_serial = self.admin_page.test_serial_number
@@ -337,7 +337,7 @@ class TestComplete9StepDeviceTransactionFlow:
                     self.state.record_step(step_name, "failed", e)
         
         # ====================================================================
-        # STEP 7: ASSIGN DEVICE TO MERCHANT (GENERATES TERMINAL_ID, STORE_ID)
+        # STEP 7: ASSIGN DEVICE TO MERCHANT (GENERATES TERMINAL_ID, STORE_ID, FONEPAY_PAN)
         # ====================================================================
         with allure.step("Step 7: Assign Device to Merchant"):
             step_name = "Device Assignment"
@@ -361,14 +361,12 @@ class TestComplete9StepDeviceTransactionFlow:
                     # Generate terminal/store data - THESE WILL BE USED FOR TRANSACTIONS
                     terminal_id = f"TERM_{self.fake.random_number(digits=8, fix_len=True)}"
                     store_id = f"STORE_{self.fake.random_number(digits=6, fix_len=True)}"
-                    fonepay_terminal_id = f"FONEPAY_{self.fake.random_number(digits=8, fix_len=True)}"
-                    fonepay_pan = self.fake.credit_card_number()
+                    fonepay_pan = f"TERM_{self.fake.random_number(digits=8, fix_len=True)}"  # This PAN will be used as Fonepay terminal ID
                     
                     terminal_data = {
-                        "terminal_id": terminal_id,           # FOR NCHL & FONEPAY TRANSACTIONS
+                        "terminal_id": terminal_id,           # FOR NCHL TRANSACTIONS
                         "store_id": store_id,                 # FOR NCHL TRANSACTIONS
-                        "fonepay_pan": fonepay_pan,
-                        "fonepay_terminal_id": fonepay_terminal_id  # FOR FONEPAY TRANSACTIONS
+                        "fonepay_pan": fonepay_pan,           # FOR FONEPAY TRANSACTIONS (used as terminal ID)
                     }
                     
                     assign_result = self.tms_page.assign_ipn_to_merchant(
@@ -378,21 +376,20 @@ class TestComplete9StepDeviceTransactionFlow:
                     
                     if assign_result.get("success", False):
                         logger.info(f"✓ Device assigned: {device_serial}")
-                        logger.info(f"  Terminal ID: {terminal_id} (for NCHL & Fonepay)")
+                        logger.info(f"  Terminal ID: {terminal_id} (for NCHL)")
                         logger.info(f"  Store ID: {store_id} (for NCHL)")
-                        logger.info(f"  Fonepay Terminal ID: {fonepay_terminal_id} (for Fonepay)")
+                        logger.info(f"  Fonepay PAN (used as Terminal ID): {fonepay_pan} (for Fonepay)")
                         
                         # Store generated data for transaction step
                         self.state.context.update({
                             "terminal_id": terminal_id,
                             "store_id": store_id,
-                            "fonepay_terminal_id": fonepay_terminal_id,
-                            "fonepay_pan": fonepay_pan
+                            "fonepay_terminal_id": fonepay_pan,  # Use the PAN as Fonepay terminal ID
                         })
                         self.state.record_step(step_name, "passed", data={
                             "terminal_id": terminal_id,
                             "store_id": store_id,
-                            "fonepay_terminal_id": fonepay_terminal_id
+                            "fonepay_terminal_id": fonepay_pan
                         })
                     else:
                         raise Exception(f"Device assignment failed: {assign_result}")
@@ -405,7 +402,7 @@ class TestComplete9StepDeviceTransactionFlow:
                     self.state.context["terminal_id"] = None
                     self.state.context["store_id"] = None
                     self.state.context["fonepay_terminal_id"] = None
-         
+        
         # ====================================================================
         # STEP 8: SEND TRANSACTION NOTIFICATIONS 
         # (USES DATA CREATED IN STEPS 5 & 7)
@@ -427,17 +424,17 @@ class TestComplete9StepDeviceTransactionFlow:
                 # Get terminal data from Step 7 (device assignment)
                 terminal_id = self.state.context.get("terminal_id")
                 store_id = self.state.context.get("store_id")
-                fonepay_terminal_id = self.state.context.get("fonepay_terminal_id")
+                fonepay_terminal_id = self.state.context.get("fonepay_terminal_id")  # This is the PAN from TMS
                 
                 logger.info("="*50)
                 logger.info("API TRANSACTION DATA (FROM TMS UI CREATION):")
                 logger.info("="*50)
                 logger.info(f"DEVICE: {device_serial}")
-                logger.info(f"NCHL - Merchant Code: {merchant_code} (from merchant creation)")
-                logger.info(f"NCHL - Terminal ID: {terminal_id} (from device assignment)")
-                logger.info(f"NCHL - Store ID: {store_id} (from device assignment)")
-                logger.info(f"FONEPAY - Merchant ID: {merchant_id} (from merchant creation)")
-                logger.info(f"FONEPAY - Terminal ID: {fonepay_terminal_id} (from device assignment)")
+                logger.info(f"NCHL - Merchant Code: {merchant_code} (from Step 5)")
+                logger.info(f"NCHL - Terminal ID: {terminal_id} (from Step 7)")
+                logger.info(f"NCHL - Store ID: {store_id} (from Step 7)")
+                logger.info(f"FONEPAY - Merchant ID: {merchant_id} (from Step 5)")
+                logger.info(f"FONEPAY - Terminal ID (PAN from TMS): {fonepay_terminal_id} (from Step 7 fonepay_pan field)")
                 logger.info("="*50)
                 
                 # Validate we have all required data
@@ -451,7 +448,7 @@ class TestComplete9StepDeviceTransactionFlow:
                 if not store_id:
                     missing_data.append("store_id")
                 if not fonepay_terminal_id:
-                    missing_data.append("fonepay_terminal_id")
+                    missing_data.append("fonepay_terminal_id (PAN from TMS)")
                 
                 if missing_data:
                     raise Exception(f"Missing transaction data from TMS UI: {missing_data}. Cannot send transactions.")
@@ -498,13 +495,13 @@ class TestComplete9StepDeviceTransactionFlow:
                     logger.info("\n📤 Sending Fonepay transaction...")
                     logger.info(f"  Amount: {fonepay_amount} (random)")
                     logger.info(f"  Merchant ID: {merchant_id} (from Step 5)")
-                    logger.info(f"  Terminal ID: {fonepay_terminal_id} (from Step 7)")
+                    logger.info(f"  Terminal ID (PAN from TMS): {fonepay_terminal_id} (from Step 7 fonepay_pan field)")
                     
                     fonepay_api = IPNAPI(base_url=API_IPN_NOTIFY_ENDPOINT, scheme="fonepay", api_key=API_KEY_FONEPAY)
                     fonepay_resp = fonepay_api.send_transaction(
                         amount=fonepay_amount,
                         merchant_id=merchant_id,
-                        terminal_id=fonepay_terminal_id
+                        terminal_id=fonepay_terminal_id  # Use the PAN from TMS as terminal ID
                     )
                     
                     if fonepay_resp.get("message") == EXPECTED_IPN_SUCCESS_MSG:
@@ -641,7 +638,7 @@ class TestComplete9StepDeviceTransactionFlow:
         logger.info(f"  Merchant ID (Fonepay): {self.state.context.get('merchant_id')}")
         logger.info(f"  Terminal ID: {self.state.context.get('terminal_id')}")
         logger.info(f"  Store ID: {self.state.context.get('store_id')}")
-        logger.info(f"  Fonepay Terminal ID: {self.state.context.get('fonepay_terminal_id')}")
+        logger.info(f"  Fonepay Terminal ID (PAN from TMS): {self.state.context.get('fonepay_terminal_id')}")
         
         # Check if critical steps passed
         critical_steps = ["Admin Portal Login", "Device Registration"]
