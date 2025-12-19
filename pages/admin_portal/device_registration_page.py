@@ -21,7 +21,7 @@ class DeviceRegistrationPage(BasePage):
         self.locators = AdminLocators
 
         # Device serial no hardcoded
-        self.test_serial_number = "38231105740018"  # Your hardcoded serial
+        self.test_serial_number = "38250820332275"  # Your hardcoded serial
     
     # ==================== DATA GENERATION ====================
     def generate_random_sim(self):
